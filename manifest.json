@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "INVI Advanced Tools",
+  "version": "5.0.0",
+  "description": "INVI inventory filter + sidebar color customizer — all in one extension.",
+  "permissions": ["storage", "tabs", "sidePanel", "scripting"],
+  "host_permissions": [
+    "https://invi.ragory.com/*"
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "INVI Advanced Tools",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  },
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://invi.ragory.com/*"],
+      "js": ["content_color.js"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": ["https://invi.ragory.com/index.php/report_con/inventoryReport*"],
+      "js": ["content_filter.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}

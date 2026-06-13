@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INVI Advanced Tools</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 16px 0;
+  }
+  .logo {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; color: white; flex-shrink: 0;
+  }
+  .header-text h1 { font-size: 15px; font-weight: 700; color: #f1f5f9; }
+  .header-text p  { font-size: 11px; color: #475569; margin-top: 1px; }
+
+  /* ── TABS ── */
+  .tab-bar {
+    display: flex; gap: 4px;
+    padding: 14px 16px 0;
+    border-bottom: 1px solid #1e2535;
+    margin-top: 14px;
+  }
+  .tab-btn {
+    flex: 1;
+    background: none; border: none; cursor: pointer;
+    color: #475569; font-size: 12px; font-weight: 600;
+    padding: 8px 4px 10px;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .tab-btn:hover { color: #94a3b8; }
+  .tab-btn.active { color: #a78bfa; border-bottom-color: #a78bfa; }
+
+  /* ── TAB CONTENT ── */
+  .tab-panel { display: none; padding: 18px 16px 24px; flex: 1; overflow-y: auto; }
+  .tab-panel.active { display: block; }
+
+  /* ─── FILTER TAB ─── */
+  .master-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #161b27; border: 1px solid #1e2535;
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  .master-toggle-row.active   { border-color: #4ade80; }
+  .master-toggle-row.inactive { border-color: #f87171; }
+  .toggle-label { display: flex; flex-direction: column; gap: 2px; }
+  .toggle-label span:first-child { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+  .toggle-label span.on  { font-size: 11px; color: #4ade80; }
+  .toggle-label span.off { font-size: 11px; color: #f87171; }
+  .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: #334155; border-radius: 24px;
+    transition: background 0.25s;
+  }
+  .slider:before {
+    content: ''; position: absolute;
+    height: 18px; width: 18px; left: 3px; bottom: 3px;
+    background: white; border-radius: 50%;
+    transition: transform 0.25s;
+  }
+  input:checked + .slider { background: #6366f1; }
+  input:checked + .slider:before { transform: translateX(20px); }
+  .filter-body { transition: opacity 0.2s; }
+  .filter-body.disabled { opacity: 0.35; pointer-events: none; }
+  .section-label {
+    font-size: 10px; font-weight: 700; color: #475569;
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .keyword-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .keyword-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #161b27; border: 1px solid #1e2535;
+    border-radius: 8px; padding: 9px 12px; transition: border-color 0.15s;
+  }
+  .keyword-item:hover { border-color: #334155; }
+  .keyword-text {
+    font-size: 13px; color: #cbd5e1;
+    font-family: 'Courier New', monospace; word-break: break-all;
+  }
+  .delete-btn {
+    background: none; border: none; cursor: pointer; color: #475569;
+    font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 4px;
+    transition: color 0.15s, background 0.15s; flex-shrink: 0; margin-left: 8px;
+  }
+  .delete-btn:hover { color: #f87171; background: #1e1e2e; }
+  .add-row { display: flex; gap: 8px; margin-bottom: 20px; }
+  .add-input {
+    flex: 1; background: #161b27; border: 1px solid #1e2535;
+    border-radius: 8px; padding: 9px 12px; font-size: 13px;
+    color: #e2e8f0; font-family: 'Courier New', monospace;
+    outline: none; transition: border-color 0.15s;
+  }
+  .add-input:focus { border-color: #6366f1; }
+  .add-input::placeholder { color: #334155; }
+  .add-btn {
+    background: #6366f1; border: none; border-radius: 8px;
+    padding: 9px 16px; color: white; font-size: 20px; font-weight: 300;
+    cursor: pointer; transition: background 0.15s; flex-shrink: 0; line-height: 1;
+  }
+  .add-btn:hover { background: #4f46e5; }
+  .divider { height: 1px; background: #1e2535; margin-bottom: 18px; }
+  .status-box {
+    background: #0d1520; border: 1px solid #1e2535;
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;
+  }
+  .status-row {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; margin-bottom: 4px;
+  }
+  .status-row:last-child { margin-bottom: 0; }
+  .status-label { color: #64748b; }
+  .status-value { font-weight: 600; color: #a78bfa; }
+  .status-value.green { color: #4ade80; }
+  .status-value.red   { color: #f87171; }
+  .save-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none; border-radius: 10px; padding: 12px;
+    color: white; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    margin-bottom: 10px;
+  }
+  .save-btn:hover { opacity: 0.9; }
+  .save-btn:active { transform: scale(0.98); }
+  .reset-btn {
+    width: 100%; background: transparent;
+    border: 1px solid #334155; border-radius: 10px; padding: 9px;
+    color: #64748b; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; margin-bottom: 16px;
+  }
+  .reset-btn:hover { border-color: #f87171; color: #f87171; }
+  .info-box {
+    background: #0d1520; border: 1px solid #1e2535;
+    border-radius: 8px; padding: 10px 12px;
+  }
+  .info-box p { font-size: 11px; color: #475569; line-height: 1.6; }
+  .info-box strong { color: #64748b; }
+  .empty-msg {
+    text-align: center; color: #334155; font-size: 12px;
+    padding: 16px 0; font-style: italic;
+  }
+
+  /* ─── COLOR TAB ─── */
+  .color-section-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #475569;
+    margin-bottom: 10px; margin-top: 18px;
+  }
+  .color-section-title:first-child { margin-top: 0; }
+  .color-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; background: #161b27; border: 1px solid #1e2535;
+    border-radius: 8px; margin-bottom: 6px;
+    transition: border-color 0.15s;
+  }
+  .color-row:hover { border-color: #334155; }
+  .color-row label { color: #8aa0bc; font-size: 12px; }
+  .color-wrap { display: flex; align-items: center; gap: 8px; }
+  .color-hex { font-size: 11px; color: #5a7090; font-family: monospace; width: 58px; text-align: right; }
+  input[type=color] {
+    width: 30px; height: 24px;
+    border: 1px solid #2a3a52; border-radius: 5px;
+    cursor: pointer; background: none; padding: 1px;
+  }
+  .color-save-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #4299e1, #3182ce);
+    border: none; border-radius: 10px; padding: 12px;
+    color: white; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    margin-top: 18px; margin-bottom: 10px;
+  }
+  .color-save-btn:hover { opacity: 0.9; }
+  .color-save-btn:active { transform: scale(0.98); }
+  .color-reset-btn {
+    width: 100%; background: transparent;
+    border: 1px solid #334155; border-radius: 10px; padding: 9px;
+    color: #64748b; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .color-reset-btn:hover { border-color: #f87171; color: #f87171; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: #22c55e; color: white; font-size: 12px; font-weight: 600;
+    padding: 8px 18px; border-radius: 20px; opacity: 0;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    pointer-events: none; white-space: nowrap; z-index: 999;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .toast.error { background: #ef4444; }
+  .toast.info  { background: #4299e1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">IV</div>
+  <div class="header-text">
+    <h1>INVI Advanced Tools</h1>
+    <p>Filter &amp; sidebar customizer</p>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="filter">🔍 Keyword Filter</button>
+  <button class="tab-btn" data-tab="color">🎨 Sidebar Color</button>
+</div>
+
+<!-- ══ FILTER TAB ══ -->
+<div class="tab-panel active" id="tab-filter">
+  <div class="master-toggle-row" id="toggleRow">
+    <div class="toggle-label">
+      <span>Filter Status</span>
+      <span id="toggleStatusText" class="on">● Active — rows are being filtered</span>
+    </div>
+    <label class="switch" title="Enable / Disable filter">
+      <input type="checkbox" id="masterToggle" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="filter-body" id="filterBody">
+    <div class="section-label">Filtered Keywords</div>
+    <div class="keyword-list" id="keywordList"></div>
+
+    <div class="add-row">
+      <input class="add-input" id="newKeyword" type="text" placeholder="Add new keyword...">
+      <button class="add-btn" id="addBtn" title="Add keyword">+</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="status-box">
+      <div class="status-row">
+        <span class="status-label">Active keyword filters</span>
+        <span class="status-value" id="countVal">0</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Tab sync status</span>
+        <span class="status-value" id="syncStatus">—</span>
+      </div>
+    </div>
+
+    <button class="save-btn" id="saveBtn">💾 Save &amp; Apply to Page</button>
+    <button class="reset-btn" id="resetBtn">↺ Reset to Defaults</button>
+
+    <div class="info-box">
+      <p>
+        <strong>How it works:</strong> Keywords added here hide matching rows from the inventory table and exclude them from Excel exports. The page's own column filters still work normally — this is an extra layer on top.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COLOR TAB ══ -->
+<div class="tab-panel" id="tab-color">
+  <div class="color-section-title">Sub-menu Background</div>
+  <div class="color-row">
+    <label>Normal Background</label>
+    <div class="color-wrap">
+      <span class="color-hex" id="hex-childBg">#1a1f2e</span>
+      <input type="color" id="childBg" value="#1a1f2e">
+    </div>
+  </div>
+  <div class="color-row">
+    <label>Hover Background</label>
+    <div class="color-wrap">
+      <span class="color-hex" id="hex-childHoverBg">#2d3748</span>
+      <input type="color" id="childHoverBg" value="#2d3748">
+    </div>
+  </div>
+
+  <div class="color-section-title">Text Color</div>
+  <div class="color-row">
+    <label>Normal Text</label>
+    <div class="color-wrap">
+      <span class="color-hex" id="hex-childText">#a0aec0</span>
+      <input type="color" id="childText" value="#a0aec0">
+    </div>
+  </div>
+  <div class="color-row">
+    <label>Hover / Active Text</label>
+    <div class="color-wrap">
+      <span class="color-hex" id="hex-childHoverText">#e2e8f0</span>
+      <input type="color" id="childHoverText" value="#e2e8f0">
+    </div>
+  </div>
+
+  <div class="color-section-title">Accent</div>
+  <div class="color-row">
+    <label>Active Border Color</label>
+    <div class="color-wrap">
+      <span class="color-hex" id="hex-accentColor">#4299e1</span>
+      <input type="color" id="accentColor" value="#4299e1">
+    </div>
+  </div>
+
+  <button class="color-save-btn" id="colorSaveBtn">💾 Save &amp; Apply Colors</button>
+  <button class="color-reset-btn" id="colorResetBtn">↺ Reset to Defaults</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="sidepanel.js"></script>
+</body>
+</html>
